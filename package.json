@@ -1,0 +1,43 @@
+{
+  "name": "@forge/desktop",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Forge desktop shell for the independent Core and Web UI modules",
+  "author": "Forge contributors",
+  "type": "module",
+  "main": "dist/main.mjs",
+  "engines": { "node": ">=22.23.1 <23" },
+  "packageManager": "pnpm@11.18.0",
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "start": "electron .",
+    "test": "node --test tests/*.test.mjs",
+    "test:smoke": "node scripts/smoke.mjs",
+    "package:mac": "electron-builder --mac dmg --arm64 --publish never"
+  },
+  "devDependencies": {
+    "@forge/core": "file:../forge-core",
+    "electron": "44.7.0",
+    "electron-builder": "26.18.0",
+    "esbuild": "0.25.12",
+    "playwright": "1.64.1"
+  },
+  "build": {
+    "appId": "org.forge.harness",
+    "productName": "Forge",
+    "asar": true,
+    "npmRebuild": false,
+    "directories": { "output": "release" },
+    "files": ["dist/main.mjs", "dist/runtime/**/*", "dist/build-info.json", "dist/versions.json", "dist/THIRD_PARTY_NOTICES.md", "package.json"],
+    "extraResources": [{ "from": "dist/renderer", "to": "renderer" }, { "from": "dist/native", "to": "native" }],
+    "artifactName": "Forge-${version}-${arch}.${ext}",
+    "mac": {
+      "target": [{ "target": "dmg", "arch": ["arm64"] }],
+      "category": "public.app-category.developer-tools",
+      "icon": "assets/brand/forge-icon-v3.png",
+      "identity": "-",
+      "notarize": false
+    },
+    "dmg": { "title": "Forge", "sign": false }
+  }
+}
