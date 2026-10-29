@@ -1,0 +1,7 @@
+{
+  "commonName": "Forge Local Code Signing",
+  "certificateSha1": "C653E76E7121921BAE9A6B3BC9498D61BA75191D",
+  "certificateSha256": "1614389D1A2D3AEABB9067C8A9A546A4BC069A12E9520223386570257C54C878",
+  "bundleId": "org.forge.harness",
+  "keychainFile": "forge-desktop-signing.keychain-db"
+}

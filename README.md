@@ -14,9 +14,24 @@ pnpm desktop           # 开发产物
 pnpm package:mac       # 在 arm64 Mac 上构建并生成 DMG，不自动上传
 ```
 
-独立检出时，将 Core、Web、Desktop 放在相邻目录。先分别安装并构建 Core/Web，再在本仓 `pnpm install --frozen-lockfile && pnpm build`。`FORGE_RENDERER_DIR` 可指定已经构建好的 Web 目录，不能指向源码。产物位于 `release/Forge-0.1.0-arm64.dmg` 与 `release/mac-arm64/Forge.app`。
+独立检出时，将 Core、Web、Desktop 放在相邻目录。先分别安装并构建 Core/Web，再在本仓 `pnpm install --frozen-lockfile && pnpm build`。`FORGE_RENDERER_DIR` 可指定已经构建好的 Web 目录，不能指向源码。产物位于 `release/Forge-<版本>-arm64.dmg` 与 `release/mac-arm64/Forge.app`，同目录的 `Forge-<版本>-arm64.signing.json` 记录证书指纹、各组件的身份要求和本次哈希。
 
-当前包采用 **ad-hoc 签名**，没有 Developer ID 签名或 Apple 公证，不属于可直接绕过 Gatekeeper 的正式分发版。无需、也不会自动关闭系统安全检查。正式分发需要拥有者提供签名/公证流程；不要把证书或 Apple 凭据写进仓库。
+### 固定本地签名身份
+
+发布包不再使用 ad-hoc。`signing-policy.json` 固定公开的证书指纹和 Bundle ID，私钥只保存在构建 Mac 的专用钥匙串中：
+
+```text
+~/Library/Keychains/forge-desktop-signing.keychain-db
+```
+
+- 证书名称为 `Forge Local Code Signing`，SHA-256 指纹为 `1614389D1A2D3AEABB9067C8A9A546A4BC069A12E9520223386570257C54C878`。不能用一张同名的新证书替代它；打包不会生成、导入或轮换密钥。
+- 同一身份在其他构建机上的钥匙串位置可通过 `FORGE_MAC_SIGNING_KEYCHAIN` 指定。钥匙串必须已解锁；可使用「钥匙串访问」解锁。私钥/钥匙串缺失、不可用或身份校验失败时打包失败，不会降级到 ad-hoc。钥匙串及受密码保护的签名身份备份由拥有者保管，不提交、不上传；丢失私钥就不能继续使用原身份。
+- 主应用、四个 Helper、框架和原生工具分别固定自己的 signing identifier。每个组件的 designated requirement（DR）同时要求固定标识和固定证书，不能只检查 Bundle ID，也不使用随代码变化的 CDHash。
+- `pnpm package:mac` 先在临时目录装配 `.app`，再使用精确指纹进行本地签名。严格验证全部 14 个原生组件和证书后，才从该 `.app` 生成 DMG。最后复核应用未被打包步骤修改并验证 DMG 完整性，成功后写入签名报告；临时目录清理。独立检出时可用 `FORGE_DESKTOP_PACKAGE_TMP` 指向仓库外的临时目录。
+- 原生文件默认标识可能包含编译 UUID，因此不能仅固定主应用证书。升级 Electron 导致原生组件集合变化时，需要审阅 `scripts/signing.mjs` 中的组件身份清单，不能跳过校验。
+- 固定身份不等于固定文件哈希：不同版本的 CDHash/DMG SHA-256 正常变化，DR 应保持相同。升级验收应验证新旧应用互相满足对方的 DR。请固定安装到 `/Applications/Forge.app`，不要长期从多个 DMG 或不同路径启动副本。
+
+这是**固定证书的本地自签名包**，不是 Developer ID 签名，也没有 Apple 公证。打包不修改系统证书信任、隐私授权或 Gatekeeper 设置。首次从旧 ad-hoc 包迁移可能需要重新授权；稳定身份不能保证系统策略变化或新增权限永远不再要求确认。正式分发需要拥有者提供 Developer ID/公证流程，并单独评估身份迁移。不要把私钥、证书口令或 Apple 凭据写进仓库。
 
 ## 运行与安全边界
 

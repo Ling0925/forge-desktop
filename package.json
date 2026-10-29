@@ -1,6 +1,6 @@
 {
   "name": "@forge/desktop",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "private": true,
   "description": "Forge desktop shell for the independent Core and Web UI modules",
   "author": "Forge contributors",
@@ -13,9 +13,10 @@
     "start": "electron .",
     "test": "node --test tests/*.test.mjs",
     "test:smoke": "node scripts/smoke.mjs",
-    "package:mac": "electron-builder --mac dmg --arm64 --publish never"
+    "package:mac": "node scripts/package-mac.mjs"
   },
   "devDependencies": {
+    "@electron/osx-sign": "1.3.3",
     "@forge/core": "file:../forge-core",
     "electron": "44.7.0",
     "electron-builder": "26.18.0",
@@ -25,6 +26,9 @@
   "build": {
     "appId": "org.forge.harness",
     "productName": "Forge",
+    "forceCodeSigning": true,
+    "beforePack": "./scripts/signing.mjs",
+    "afterSign": "./scripts/signing.mjs",
     "asar": true,
     "npmRebuild": false,
     "directories": { "output": "release" },
@@ -35,7 +39,9 @@
       "target": [{ "target": "dmg", "arch": ["arm64"] }],
       "category": "public.app-category.developer-tools",
       "icon": "assets/brand/forge-icon-v3.png",
-      "identity": "-",
+      "identity": "C653E76E7121921BAE9A6B3BC9498D61BA75191D",
+      "entitlements": "assets/entitlements.mac.plist",
+      "entitlementsInherit": "assets/entitlements.mac.plist",
       "notarize": false
     },
     "dmg": { "title": "Forge", "sign": false }

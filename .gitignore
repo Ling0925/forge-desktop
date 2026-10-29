@@ -4,3 +4,10 @@ release/
 .DS_Store
 .env
 .env.*
+# Private signing material stays outside the repository.
+*.keychain
+*.keychain-db
+*.p12
+*.pfx
+*.key
+*.pem
