@@ -115,7 +115,11 @@ try {
   await page.getByRole("button", { name: "模型服务已添加", exact: true }).waitFor();
   assert.equal(await page.getByRole("region", { name: "设置工作区" }).count(), 0);
   await page.locator(".session-item-main").filter({ hasText: "Model service smoke" }).click();
+  // The real HTTP snapshot hydrates after navigation; do not assert against
+  // the intermediate render that still has no session-bound source/model.
+  await page.getByRole("heading", { name: "Model service smoke", exact: true }).waitFor();
   await page.locator(".composer-textarea").fill("Session-bound model without a global default");
+  await page.locator(".composer-run:not(:disabled)").waitFor();
   assert.equal(await page.getByRole("button", { name: "运行", exact: true }).isEnabled(), true);
   const statusHint = await page.locator(".sidebar-model-status").getAttribute("title");
   assert.ok(statusHint.includes("不是网络连接状态"));
